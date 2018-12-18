@@ -39,6 +39,13 @@ client.on("message", (message) => {
     // extract command
     const command = args.shift().toLowerCase();
 
+    if (command === "ping") {
+        // Calculates ping between sending a message and editing it, giving a nice round-trip latency.
+        // The second ping is an average latency between the bot and the websocket server (one-way, not round-trip)
+        const m = await message.channel.send("Ping?");
+        m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
+    }
+
     // trigger for !add in allowed room
     if (command === "add" && message.channel.id === config.allowed_room) {
         // check if we have enough args
@@ -47,7 +54,7 @@ client.on("message", (message) => {
             return;
         }
         // returns all member with target role
-        let membersWithRole =  message.guild.members.filter(member => {
+        let membersWithRole = message.guild.members.filter(member => {
             return member.roles.get(config.role);
         }).map(member => {
             return member.user.id;
@@ -57,8 +64,7 @@ client.on("message", (message) => {
         // check if given user is part of STREAMER FRIENDS
         if (membersWithRole.includes(args[0])) {
             getStreamInfos(args[1]).then(function (result) {
-                if (_.isEmpty(result))
-                {
+                if (_.isEmpty(result)) {
                     spamchannel.send(`<${args[1]}> is no valid Twitch User!`);
                     return;
                 }
