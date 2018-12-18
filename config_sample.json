@@ -1,0 +1,13 @@
+{
+  "token": "",
+  "prefix": "!",
+  "role": "398245005254328330",
+  "allowed_room": "523866976355876874",
+  "trash_room": "temp",
+  "target_room": "mods",
+  "Client-ID": "",
+  "callback": "",
+  "secret": "",
+  "port": 8443,
+  "host": ""
+}
