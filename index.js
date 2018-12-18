@@ -47,7 +47,11 @@ client.on("message", (message) => {
             return;
         }
         // returns all member with target role
-        let membersWithRole = getMemberFromTargetRole(message, config.role);
+        let membersWithRole =  message.guild.members.filter(member => {
+            return member.roles.get(config.role);
+        }).map(member => {
+            return member.user.id;
+        });
         // remmove discord crap from userid
         args[0] = args[0].match(/[^a-z!@ ]\ *([.0-9])*\d/)[0];
         // check if given user is part of STREAMER FRIENDS
@@ -55,7 +59,7 @@ client.on("message", (message) => {
             getStreamInfos(args[1]).then(function (result) {
                 if (_.isEmpty(result))
                 {
-                    spamchannel.channel.send(`<${args[1]}> is no valid Twitch User!`);
+                    spamchannel.send(`<${args[1]}> is no valid Twitch User!`);
                     return;
                 }
                 const embed = new RichEmbed()
@@ -76,14 +80,14 @@ client.on("message", (message) => {
                     // save DB
                     userDb.saveDatabase();
                     // send message to room
-                    spamchannel.channel.send("added:");
-                    spamchannel.channel.send(embed);
+                    spamchannel.send("added:");
+                    spamchannel.send(embed);
                     // subcribe Twitch webhook
                     subscribeTwitchLiveWebhook(result.id);
 
                 }
                 else {
-                    spamchannel.channel.send(`<@${args[0]}> is already in Database!`);
+                    spamchannel.send(`<@${args[0]}> is already in Database!`);
                 }
             });
 
@@ -222,14 +226,6 @@ function subscibeAll() {
             spamchannel.send(`loaded: <${resultUser}> ✅`);
         });
     }
-}
-
-function getMemberFromTargetRole(message, role) {
-    message.guild.members.filter(member => {
-        return member.roles.get(role);
-    }).map(member => {
-        return member.user.id;
-    });
 }
 
 // tell Twitch that we no longer listen
