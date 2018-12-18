@@ -11,7 +11,7 @@ let spamchannel;
 let streamchannel;
 
 const twitchWebhook = new TwitchWebhook({
-    client_id: config.Client-ID,
+    client_id: config.Client_ID,
     callback: config.callback,
     secret: config.secret,
     listen: {
@@ -155,7 +155,7 @@ async function getTwitchUserByID(id) {
         url: url,
         parse: 'json',
         headers: {
-            'Client-ID': config.Client-ID
+            'Client-ID': config.Client_ID
         }
     });
     return res.body.data[0].display_name;
@@ -172,7 +172,7 @@ async function getTwitchGameByID(id) {
         url: url,
         parse: 'json',
         headers: {
-            'Client-ID': config.Client-ID
+            'Client-ID': config.Client_ID
         }
     });
     return res.body.data[0].name;
@@ -186,7 +186,7 @@ async function getStreamInfos(streamer) {
         url: url,
         parse: 'json',
         headers: {
-            'Client-ID': config.Client-ID
+            'Client-ID': config.Client_ID
         }
     });
     return res.body.data[0];
