@@ -46,6 +46,22 @@ client.on("message", async message => {
         m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
     }
 
+    if (command === "purge") {
+        // This command removes all messages from all users in the channel, up to 100.
+
+        // get the delete count, as an actual number.
+        const deleteCount = parseInt(args[0], 10);
+
+        // Ooooh nice, combined conditions. <3
+        if (!deleteCount || deleteCount < 2 || deleteCount > 100)
+            return message.reply("Please provide a number between 2 and 100 for the number of messages to delete");
+
+        // So we get our messages, and delete them. Simple enough, right?
+        const fetched = await message.channel.fetchMessages({ limit: deleteCount });
+        message.channel.bulkDelete(fetched)
+            .catch(error => message.reply(`Couldn't delete messages because of: ${error}`));
+    }
+
     // trigger for !add in allowed room
     if (command === "add" && message.channel.id === config.allowed_room) {
         // check if we have enough args
