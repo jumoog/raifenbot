@@ -53,6 +53,11 @@ client.on("message", (message) => {
         // check if given user is part of STREAMER FRIENDS
         if (membersWithRole.includes(args[0])) {
             getStreamInfos(args[1]).then(function (result) {
+                if (_.isEmpty(result))
+                {
+                    spamchannel.channel.send(`<${args[1]}> is no valid Twitch User!`);
+                    return;
+                }
                 const embed = new RichEmbed()
                     // Set the title of the field
                     .setTitle(result.display_name)
