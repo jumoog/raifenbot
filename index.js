@@ -27,7 +27,7 @@ client.on("ready", () => {
     announcementschannel = client.channels.find('name', "announcements");
     spamchannel = client.channels.find('name', config.trash_room);
     streamchannel = client.channels.find('name', config.target_room);
-    spamchannel.send("I am so 🧀");
+    //spamchannel.send("I am so 🧀");
     client.user.setActivity(`Serving ${client.users.size} members!`);
     userDb.loadDatabase({}, function () {
         subscibeAll();
@@ -290,11 +290,11 @@ function getAllUsers() {
 
 function subscibeAll() {
     var a = getAllUsers();
-    spamchannel.send("Database loaded! ☁");
+    //spamchannel.send("Database loaded! ☁");
     for (var i = 0; i < a.length; i++) {
         subscribeTwitchLiveWebhook(a[i].twitch_id);
         getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
-            spamchannel.send(`loaded: <${resultUser}> ✅`);
+            //spamchannel.send(`loaded: <${resultUser}> ✅`);
         });
     }
 }
