@@ -9,6 +9,7 @@ const _ = require("underscore");
 
 let spamchannel;
 let streamchannel;
+let announcementschannel;
 
 const twitchWebhook = new TwitchWebhook({
     client_id: config.Client_ID,
@@ -22,6 +23,7 @@ const twitchWebhook = new TwitchWebhook({
 });
 
 client.on("ready", () => {
+    announcementschannel = client.channels.find('name', "announcements");
     spamchannel = client.channels.find('name', config.trash_room);
     streamchannel = client.channels.find('name', config.target_room);
     spamchannel.send("I am so 🧀");
@@ -202,9 +204,17 @@ function sendDiscordEmbed(event, user, game) {
         .setImage(event.data[0].thumbnail_url.replace("{width}", "400").replace(
             "{height}", "225"))
         .setTimestamp(x);
+    if (event.data[0].user_id ==="71946143")
+    {
+        announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
+        announcementschannel.send(embed);
+    }
+    else
+    {
+        streamchannel.send(`<@${userID[0].discord_id}> is live now`);
+        streamchannel.send(embed);
+    }
 
-    streamchannel.send(`<@${userID[0].discord_id}> is live now`);
-    streamchannel.send(embed);
 }
 
 async function getTwitchUserByID(id) {
