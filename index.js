@@ -25,6 +25,7 @@ client.on("ready", () => {
     spamchannel = client.channels.find('name', config.trash_room);
     streamchannel = client.channels.find('name', config.target_room);
     spamchannel.send("I am so 🧀");
+    client.user.setActivity(`Serving ${client.users.size} members!`);
     userDb.loadDatabase({}, function () {
         subscibeAll();
     });
