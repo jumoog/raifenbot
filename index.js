@@ -31,6 +31,14 @@ client.on("ready", () => {
     });
 });
 
+client.on("guildMemberAdd", (member) => {
+    client.user.setActivity(`Serving ${client.users.size} members!`);
+});
+
+client.on("guildMemberRemove", (member) => {
+    client.user.setActivity(`Serving ${client.users.size} members!`);
+});
+
 client.on("message", async message => {
     // ignore bots and commands without prefix
     if (!message.content.startsWith(config.prefix) || message.author.bot) return;
