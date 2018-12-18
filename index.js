@@ -34,20 +34,21 @@ client.on("message", (message) => {
     // ignore bots and commands without prefix
     if (!message.content.startsWith(config.prefix) || message.author.bot) return;
 
+    // get args as array
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+    // extract command
     const command = args.shift().toLowerCase();
 
+    // trigger for !add in allowed room
     if (command === "add" && message.channel.id === config.allowed_room) {
+        // check if we have enough args
         if (args.length != 2) {
             message.reply('incomplete argument: \n please use !add <@username> <twitch name>');
             return;
         }
-        let membersWithRole = message.guild.members.filter(member => {
-            return member.roles.get(config.role);
-        }).map(member => {
-            return member.user.id;
-        });
-        // remmove discord crap
+        // returns all member with target role
+        let membersWithRole = getMemberFromTargetRole(message, config.role);
+        // remmove discord crap from userid
         args[0] = args[0].match(/[^a-z!@ ]\ *([.0-9])*\d/)[0];
         // check if given user is part of STREAMER FRIENDS
         if (membersWithRole.includes(args[0])) {
@@ -62,13 +63,17 @@ client.on("message", (message) => {
                     .setThumbnail(result.profile_image_url)
                     .setURL("https://www.twitch.tv/" + result.login)
                     .addField("view count", result.view_count);
-                var tyrfing = userDb.getCollection('users').find({ twitch_id: result.id });
+                var userID = userDb.getCollection('users').find({ twitch_id: result.id });
                 // if user isn't in the DB
-                if (_.isEmpty(tyrfing)) {
+                if (_.isEmpty(userID)) {
+                    // add user to DB
                     userDb.getCollection('users').insert({ twitch_id: result.id, discord_id: args[0] });
+                    // save DB
                     userDb.saveDatabase();
+                    // send message to room
                     spamchannel.channel.send("added:");
                     spamchannel.channel.send(embed);
+                    // subcribe Twitch webhook
                     subscribeTwitchLiveWebhook(result.id);
 
                 }
@@ -86,11 +91,17 @@ client.on("message", (message) => {
 
 // someones role has changed
 client.on('guildMemberUpdate', (oldMember, newMember) => {
+    // user is no longer in role
     if (!newMember.roles.has(config.role) && oldMember.roles.has(config.role)) {
+        // check if user was in our DB
         let twitchID = userDb.getCollection('users').find({ discord_id: newMember.id });
+        // if user was in our DB
         if (!_.isEmpty(twitchID)) {
+            // remove the user
             userDb.getCollection('users').findAndRemove({ discord_id: newMember.id });
+            // save the DB
             userDb.saveDatabase();
+            // unsubcribe Twitch webhook
             unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
         }
         spamchannel.send(`${newMember} is no longer part of STREAMER FRIENDS`);
@@ -104,7 +115,9 @@ client.login(config.token);
 
 twitchWebhook.on('streams', ({ topic, options, endpoint, event }) => {
     if (event.data.length != 0) {
+        // get current twitch name from twitch
         getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
+            // get game name from twitch
             getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
                 sendDiscordEmbed(event, resultUser, resultGame);
             });
@@ -129,13 +142,11 @@ function unsubscribeTwitchLiveWebhook(id) {
 }
 
 function sendDiscordEmbed(event, user, game) {
-    var tyrfing = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
+    var userID = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
     var rightNow = new Date();
     var x = rightNow.toISOString();
     let embed = new RichEmbed()
-        //.setDescription(jsonResponse.stream.channel.display_name + " is streaming: ")
         .setColor("#9B59B6")
-        //TODO get game
         .setDescription(`**Playing**: ${game}`)
         .setTitle(event.data[0].title)
         .setURL(`https://twitch.tv/${user}`)
@@ -143,7 +154,7 @@ function sendDiscordEmbed(event, user, game) {
             "{height}", "225"))
         .setTimestamp(x);
 
-    streamchannel.send(`<@${tyrfing[0].discord_id}> is live now`);
+    streamchannel.send(`<@${userID[0].discord_id}> is live now`);
     streamchannel.send(embed);
 }
 
@@ -162,6 +173,7 @@ async function getTwitchUserByID(id) {
 }
 
 async function getTwitchGameByID(id) {
+    // some people maybe have GameID 0 which is not valid somehow
     if (id === "0") {
         id = "1";
     }
@@ -205,6 +217,14 @@ function subscibeAll() {
             spamchannel.send(`loaded: <${resultUser}> ✅`);
         });
     }
+}
+
+function getMemberFromTargetRole(message, role) {
+    message.guild.members.filter(member => {
+        return member.roles.get(role);
+    }).map(member => {
+        return member.user.id;
+    });
 }
 
 // tell Twitch that we no longer listen
