@@ -158,7 +158,7 @@ client.on("message", async message => {
 
         }
         else {
-            message.reply(`${args[0]} is not part of of STREAMER FRIENDS, please add ${args[0]} to STREAMER FRIENDS first!`);
+            message.reply(`<@${args[0]}> is not part of of STREAMER FRIENDS, please add <@${args[0]}> to STREAMER FRIENDS first!`);
         }
     }
 });
