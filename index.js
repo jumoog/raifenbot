@@ -55,21 +55,21 @@ client.on("message", async message => {
         if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
+        
         const embed = new RichEmbed()
             // Set the title of the field
             .setTitle("Server Infos:")
             // Set the color of the embed
             .setColor(0x51e506)
-            // Set the main content of the embed
-            .setDescription(result.description)
-            .addField("uptime", getUptime())
-            .addField("cpu_platform", os.arch())
-            .addField("cpu_model", os.cpus()[0].model)
-            .addField("cpu_cores", os.cpus().length)
-            .addField("cpu_usage", cpuusage)
-            .addField("freemem", os.freemem())
-            .addField("load", getLoadavg())
-            .addField("os", os.platform());
+            .addField("Uptime", format(os.uptime()))
+            .addField("Cpu platform", os.arch())
+            .addField("Cpu model", os.cpus()[0].model)
+            .addField("Cpu cores", os.cpus().length)
+            .addField("Total memory (mb)", os.totalmem()/ (1024 * 1024))
+            .addField("Free memory (mb)", os.freemem()/ (1024 * 1024))
+            .addField("Load", os.loadavg())
+            .addField("OS", os.platform())
+            .addField("Version", os.release());
         spamchannel.send(embed);
     }
 
@@ -306,3 +306,14 @@ process.on('SIGINT', () => {
     twitchWebhook.unsubscribe('*');
     process.exit(0);
 });
+
+function format(seconds){
+    function pad(s){
+      return (s < 10 ? '0' : '') + s;
+    }
+    var hours = Math.floor(seconds / (60*60));
+    var minutes = Math.floor(seconds % (60*60) / 60);
+    var seconds = Math.floor(seconds % 60);
+  
+    return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+  }
