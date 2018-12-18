@@ -6,6 +6,7 @@ const TwitchWebhook = require('twitch-webhook');
 const loki = require('lokijs');
 const userDb = new loki('loki.json');
 const _ = require("underscore");
+const os = require('os');
 
 let spamchannel;
 let streamchannel;
@@ -49,6 +50,28 @@ client.on("message", async message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     // extract command
     const command = args.shift().toLowerCase();
+
+    if (command === "stats") {
+        if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
+            return message.reply("Sorry, you don't have permissions to use this!");
+        }
+        const embed = new RichEmbed()
+            // Set the title of the field
+            .setTitle("Server Infos:")
+            // Set the color of the embed
+            .setColor(0x51e506)
+            // Set the main content of the embed
+            .setDescription(result.description)
+            .addField("uptime", getUptime())
+            .addField("cpu_platform", os.arch())
+            .addField("cpu_model", os.cpus()[0].model)
+            .addField("cpu_cores", os.cpus().length)
+            .addField("cpu_usage", cpuusage)
+            .addField("freemem", os.freemem())
+            .addField("load", getLoadavg())
+            .addField("os", os.platform());
+        spamchannel.send(embed);
+    }
 
     if (command === "ping") {
         if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
@@ -204,13 +227,11 @@ function sendDiscordEmbed(event, user, game) {
         .setImage(event.data[0].thumbnail_url.replace("{width}", "400").replace(
             "{height}", "225"))
         .setTimestamp(x);
-    if (event.data[0].user_id ==="71946143")
-    {
+    if (event.data[0].user_id === "71946143") {
         announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
         announcementschannel.send(embed);
     }
-    else
-    {
+    else {
         streamchannel.send(`<@${userID[0].discord_id}> is live now`);
         streamchannel.send(embed);
     }
