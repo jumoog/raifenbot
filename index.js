@@ -49,7 +49,7 @@ client.on("message", async message => {
     const command = args.shift().toLowerCase();
 
     if (command === "ping") {
-        if (!message.member.roles.some(r => ["MODZ", "SUBZ"].includes(r.name))) {
+        if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
         // Calculates ping between sending a message and editing it, giving a nice round-trip latency.
@@ -59,7 +59,7 @@ client.on("message", async message => {
     }
 
     if (command === "purge") {
-        if (!message.member.roles.some(r => ["MODZ", "Admin"].includes(r.name))) {
+        if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
         // This command removes all messages from all users in the channel, up to 100.
@@ -79,7 +79,7 @@ client.on("message", async message => {
 
     // trigger for !add in allowed room
     if (command === "add" && message.channel.id === config.allowed_room) {
-        if (!message.member.roles.some(r => ["MODZ", "Admin"].includes(r.name))) {
+        if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
         // check if we have enough args
