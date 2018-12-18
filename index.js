@@ -30,7 +30,7 @@ client.on("ready", () => {
     });
 });
 
-client.on("message", (message) => {
+client.on("message", async message => {
     // ignore bots and commands without prefix
     if (!message.content.startsWith(config.prefix) || message.author.bot) return;
 
