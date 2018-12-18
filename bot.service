@@ -1,0 +1,14 @@
+[Unit]
+Description=RAIFEN BOT
+After=network.target
+
+[Service]
+User=bot
+Group=bot
+Environment='NODE_ENV=production'
+WorkingDirectory=/opt/raifenbot
+ExecStart=/usr/bin/node index.js
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
