@@ -84,6 +84,12 @@ client.on("message", async message => {
         m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
     }
 
+    if (command === "catfact") {
+        getNewCatFact().then(function (catFact) {
+            return message.reply(catFact);
+        });
+    }
+
     if (command === "purge") {
         if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
@@ -357,4 +363,15 @@ async function getStreamState(id) {
         }
     });
     return res.body.data;
+}
+
+async function getNewCatFact() {
+    // build the URL
+    let url = `https://catfact.ninja/fact`;
+    // do the request
+    let res = await p({
+        url: url,
+        parse: 'json'
+    });
+    return res.body.fact;
 }
