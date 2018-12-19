@@ -7,6 +7,7 @@ const loki = require('lokijs');
 const userDb = new loki('loki.json');
 const _ = require("underscore");
 const os = require('os');
+let output = [];
 
 let spamchannel;
 let streamchannel;
@@ -55,7 +56,7 @@ client.on("message", async message => {
         if (!message.member.roles.some(r => ["Modz", "Admin"].includes(r.name))) {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
-        
+
         const embed = new RichEmbed()
             // Set the title of the field
             .setTitle("Server Infos:")
@@ -65,8 +66,8 @@ client.on("message", async message => {
             .addField("Cpu platform", os.arch())
             .addField("Cpu model", os.cpus()[0].model)
             .addField("Cpu cores", os.cpus().length)
-            .addField("Total memory (mb)", os.totalmem()/ (1024 * 1024))
-            .addField("Free memory (mb)", os.freemem()/ (1024 * 1024))
+            .addField("Total memory (mb)", os.totalmem() / (1024 * 1024))
+            .addField("Free memory (mb)", os.freemem() / (1024 * 1024))
             .addField("Load", os.loadavg())
             .addField("OS", os.platform())
             .addField("Version", os.release());
@@ -189,13 +190,22 @@ client.login(config.token);
 
 twitchWebhook.on('streams', ({ topic, options, endpoint, event }) => {
     if (event.data.length != 0) {
-        // get current twitch name from twitch
-        getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
-            // get game name from twitch
-            getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
-                sendDiscordEmbed(event, resultUser, resultGame);
+        if (!isOnlineInDB(event.data[0].user_id)) {
+            // get current twitch name from twitch
+            getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
+                // get game name from twitch
+                getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
+                    sendDiscordEmbed(event, resultUser, resultGame);
+                });
             });
-        });
+        }
+    }
+    else {
+        if (isOnlineInDB(options.user_id)) {
+            output.splice(_.findIndex(output, { twitch_id: options.user_id }), 1);
+            var userID = userDb.getCollection('users').find({ twitch_id: options.user_id });
+            streamchannel.send(`<@${userID[0].discord_id}> is offline now`);
+        }
     }
 });
 
@@ -293,9 +303,9 @@ function subscibeAll() {
     //spamchannel.send("Database loaded! ☁");
     for (var i = 0; i < a.length; i++) {
         subscribeTwitchLiveWebhook(a[i].twitch_id);
-        getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
-            //spamchannel.send(`loaded: <${resultUser}> ✅`);
-        });
+        //getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
+        //spamchannel.send(`loaded: <${resultUser}> ✅`);
+        //});
     }
 }
 
@@ -307,13 +317,44 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-function format(seconds){
-    function pad(s){
-      return (s < 10 ? '0' : '') + s;
+function format(seconds) {
+    function pad(s) {
+        return (s < 10 ? '0' : '') + s;
     }
-    var hours = Math.floor(seconds / (60*60));
-    var minutes = Math.floor(seconds % (60*60) / 60);
+    var hours = Math.floor(seconds / (60 * 60));
+    var minutes = Math.floor(seconds % (60 * 60) / 60);
     var seconds = Math.floor(seconds % 60);
-  
+
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-  }
+}
+
+function isOnlineInDB(twitch_id) {
+    if (_.findIndex(output, { twitch_id: twitch_id }) === -1) {
+        output.push({ 'twitch_id': twitch_id });
+        return false;
+    }
+    return true;
+}
+
+function isOnline(twitch_id) {
+    getStreamState(twitch_id).then(function (resultUser) {
+        if (_.isEmpty(resultUser)) {
+            return true;
+        }
+        return false;
+    });
+}
+
+async function getStreamState(id) {
+    // build the URL
+    let url = `https://api.twitch.tv/helix/streams?user_id=${id}`;
+    // do the request
+    let res = await p({
+        url: url,
+        parse: 'json',
+        headers: {
+            'Client-ID': config.Client_ID
+        }
+    });
+    return res.body.data;
+}
