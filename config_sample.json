@@ -9,5 +9,7 @@
   "callback": "",
   "secret": "",
   "port": 8443,
-  "host": ""
+  "host": "",
+  "offlineMessage": false,
+  "debugMode": false
 }

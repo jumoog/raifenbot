@@ -28,7 +28,9 @@ client.on("ready", () => {
     announcementschannel = client.channels.find('name', "announcements");
     spamchannel = client.channels.find('name', config.trash_room);
     streamchannel = client.channels.find('name', config.target_room);
-    //spamchannel.send("I am so 🧀");
+    if (config.debugMode) {
+        spamchannel.send("I am so 🧀");
+    }
     client.user.setActivity(`Serving ${client.users.size} members!`);
     userDb.loadDatabase({}, function () {
         subscibeAll();
@@ -209,8 +211,10 @@ twitchWebhook.on('streams', ({ topic, options, endpoint, event }) => {
     else {
         if (isOnlineInDB(options.user_id)) {
             output.splice(_.findIndex(output, { twitch_id: options.user_id }), 1);
-            var userID = userDb.getCollection('users').find({ twitch_id: options.user_id });
-            streamchannel.send(`<@${userID[0].discord_id}> is offline now`);
+            if (config.offlineMessage) {
+                var userID = userDb.getCollection('users').find({ twitch_id: options.user_id });
+                streamchannel.send(`<@${userID[0].discord_id}> is offline now`);
+            }
         }
     }
 });
@@ -309,9 +313,11 @@ function subscibeAll() {
     //spamchannel.send("Database loaded! ☁");
     for (var i = 0; i < a.length; i++) {
         subscribeTwitchLiveWebhook(a[i].twitch_id);
-        //getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
-        //spamchannel.send(`loaded: <${resultUser}> ✅`);
-        //});
+        if (config.debugMode) {
+            getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
+                spamchannel.send(`loaded: <${resultUser}> ✅`);
+            });
+        }
     }
 }
 
