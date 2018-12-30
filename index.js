@@ -274,7 +274,7 @@ async function getTwitchUserByID(id) {
             'Client-ID': config.Client_ID
         }
     });
-    return res.body.data[0].display_name;
+    return res.body.data[0].login;
 }
 
 async function getTwitchGameByID(id) {
