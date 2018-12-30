@@ -240,7 +240,7 @@ function unsubscribeTwitchLiveWebhook(id) {
 
 function sendDiscordEmbed(event, user, game) {
     let filename = uuidv4() + ".jpg";
-    downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-1280x720.jpg`, filename).then(function (resultPath) {
+    downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-300x164.jpg`, filename).then(function (resultPath) {
         let userID = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
         let rightNow = new Date();
         let x = rightNow.toISOString();
