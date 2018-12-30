@@ -7,6 +7,9 @@ const loki = require('lokijs');
 const userDb = new loki('loki.json');
 const _ = require("underscore");
 const os = require('os');
+const uuidv4 = require('uuid/v4');
+const download = require('image-downloader')
+
 let output = [];
 
 let spamchannel;
@@ -236,25 +239,28 @@ function unsubscribeTwitchLiveWebhook(id) {
 }
 
 function sendDiscordEmbed(event, user, game) {
-    var userID = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
-    var rightNow = new Date();
-    var x = rightNow.toISOString();
-    let embed = new RichEmbed()
-        .setColor("#9B59B6")
-        .setDescription(`**Playing**: ${game}`)
-        .setTitle(event.data[0].title)
-        .setURL(`https://twitch.tv/${user}`)
-        .setImage(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-1280x720.jpg`)
-        .setTimestamp(x);
-    if (event.data[0].user_id === "71946143") {
-        announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
-        announcementschannel.send(embed);
-    }
-    else {
-        streamchannel.send(`<@${userID[0].discord_id}> is live now`);
-        streamchannel.send(embed);
-    }
-
+    let filename = uuidv4() + ".jpg";
+    downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-1280x720.jpg`, filename).then(function (resultPath) {
+        let userID = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
+        let rightNow = new Date();
+        let x = rightNow.toISOString();
+        let embed = new RichEmbed()
+            .setColor("#9B59B6")
+            .attachFile(resultPath)
+            .setDescription(`**Playing**: ${game}`)
+            .setTitle(event.data[0].title)
+            .setURL(`https://twitch.tv/${user}`)
+            .setImage(`attachment://${filename}`)
+            .setTimestamp(x);
+        if (event.data[0].user_id === "71946143") {
+            announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
+            announcementschannel.send(embed);
+        }
+        else {
+            streamchannel.send(`<@${userID[0].discord_id}> is live now`);
+            streamchannel.send(embed);
+        }
+    });
 }
 
 async function getTwitchUserByID(id) {
@@ -329,15 +335,15 @@ process.on('SIGINT', () => {
 });
 
 function format(time) {
-  let days = Math.floor(time % 31536000 / 86400)
-  let hours = Math.floor(time % 31536000 % 86400 / 3600)
-  let minutes = Math.floor(time % 31536000 % 86400 % 3600 / 60)
-  let seconds = Math.round(time % 31536000 % 86400 % 3600 % 60)
-  days = days > 9 ? days : '0' + days
-  hours = hours > 9 ? hours : '0' + hours
-  minutes = minutes > 9 ? minutes : '0' + minutes
-  seconds = seconds > 9 ? seconds : '0' + seconds
-  return `${days > 0 ? `${days}:` : ``}${(hours || days) > 0 ? `${hours}:` : ``}${minutes}:${seconds}`
+    let days = Math.floor(time % 31536000 / 86400)
+    let hours = Math.floor(time % 31536000 % 86400 / 3600)
+    let minutes = Math.floor(time % 31536000 % 86400 % 3600 / 60)
+    let seconds = Math.round(time % 31536000 % 86400 % 3600 % 60)
+    days = days > 9 ? days : '0' + days
+    hours = hours > 9 ? hours : '0' + hours
+    minutes = minutes > 9 ? minutes : '0' + minutes
+    seconds = seconds > 9 ? seconds : '0' + seconds
+    return `${days > 0 ? `${days}:` : ``}${(hours || days) > 0 ? `${hours}:` : ``}${minutes}:${seconds}`
 }
 
 function isOnlineInDB(twitch_id) {
@@ -380,4 +386,17 @@ async function getNewCatFact() {
         parse: 'json'
     });
     return res.body.fact;
+}
+
+async function downloadIMG(url, target_filename) {
+    const options = {
+        url: url,
+        dest: '/tmp/' + target_filename
+    }
+    try {
+        const { filename, image } = await download.image(options)
+        return (filename) // => /path/to/dest/image.jpg 
+    } catch (e) {
+        console.error(e)
+    }
 }
