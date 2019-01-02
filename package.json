@@ -11,7 +11,7 @@
     "url": "git+https://github.com/jumoog/raifenbot.git"
   },
   "author": "jumoog",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/jumoog/raifenbot/issues"
   },
