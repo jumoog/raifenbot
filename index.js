@@ -1,4 +1,7 @@
-const { Client, RichEmbed } = require("discord.js");
+const {
+    Client,
+    RichEmbed
+} = require("discord.js");
 const client = new Client();
 const config = require("./config.json");
 const p = require('phin').promisified;
@@ -109,7 +112,9 @@ client.on("message", async message => {
             return message.reply("Please provide a number between 2 and 100 for the number of messages to delete");
 
         // So we get our messages, and delete them. Simple enough, right?
-        const fetched = await message.channel.fetchMessages({ limit: deleteCount });
+        const fetched = await message.channel.fetchMessages({
+            limit: deleteCount
+        });
         message.channel.bulkDelete(fetched)
             .catch(error => message.reply(`Couldn't delete messages because of: ${error}`));
     }
@@ -149,11 +154,16 @@ client.on("message", async message => {
                     .setThumbnail(result.profile_image_url)
                     .setURL("https://www.twitch.tv/" + result.login)
                     .addField("view count", result.view_count);
-                var userID = userDb.getCollection('users').find({ twitch_id: result.id });
+                var userID = userDb.getCollection('users').find({
+                    twitch_id: result.id
+                });
                 // if user isn't in the DB
                 if (_.isEmpty(userID)) {
                     // add user to DB
-                    userDb.getCollection('users').insert({ twitch_id: result.id, discord_id: args[0] });
+                    userDb.getCollection('users').insert({
+                        twitch_id: result.id,
+                        discord_id: args[0]
+                    });
                     // save DB
                     userDb.saveDatabase();
                     // send message to room
@@ -162,14 +172,12 @@ client.on("message", async message => {
                     // subcribe Twitch webhook
                     subscribeTwitchLiveWebhook(result.id);
 
-                }
-                else {
+                } else {
                     spamchannel.send(`<@${args[0]}> is already in Database!`);
                 }
             });
 
-        }
-        else {
+        } else {
             message.reply(`<@${args[0]}> is not part of of STREAMER FRIENDS, please add <@${args[0]}> to STREAMER FRIENDS first!`);
         }
     }
@@ -180,11 +188,15 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
     // user is no longer in role
     if (!newMember.roles.has(config.role) && oldMember.roles.has(config.role)) {
         // check if user was in our DB
-        let twitchID = userDb.getCollection('users').find({ discord_id: newMember.id });
+        let twitchID = userDb.getCollection('users').find({
+            discord_id: newMember.id
+        });
         // if user was in our DB
         if (!_.isEmpty(twitchID)) {
             // remove the user
-            userDb.getCollection('users').findAndRemove({ discord_id: newMember.id });
+            userDb.getCollection('users').findAndRemove({
+                discord_id: newMember.id
+            });
             // save the DB
             userDb.saveDatabase();
             // unsubcribe Twitch webhook
@@ -199,23 +211,49 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
 
 client.login(config.token);
 
-twitchWebhook.on('streams', ({ topic, options, endpoint, event }) => {
+twitchWebhook.on('streams', ({
+    topic,
+    options,
+    endpoint,
+    event
+}) => {
     if (event.data.length != 0) {
         if (!isOnlineInDB(event.data[0].user_id)) {
             // get current twitch name from twitch
             getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
                 // get game name from twitch
-                getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
-                    sendDiscordEmbed(event, resultUser, resultGame);
-                });
+                if (isPartOfStreamerFriends(resultUser)) {
+                    getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
+                        sendDiscordEmbed(event, resultUser, resultGame);
+                    });
+                } else {
+                    // check if user was in our DB
+                    let twitchID = userDb.getCollection('users').find({
+                        discord_id: newMember.id
+                    });
+                    // if user was in our DB
+                    if (!_.isEmpty(twitchID)) {
+                        // remove the user
+                        userDb.getCollection('users').findAndRemove({
+                            discord_id: newMember.id
+                        });
+                        // save the DB
+                        userDb.saveDatabase();
+                        // unsubcribe Twitch webhook
+                        unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
+                    }
+                }
             });
         }
-    }
-    else {
+    } else {
         if (isOnlineInDB(options.user_id)) {
-            output.splice(_.findIndex(output, { twitch_id: options.user_id }), 1);
+            output.splice(_.findIndex(output, {
+                twitch_id: options.user_id
+            }), 1);
             if (config.offlineMessage) {
-                var userID = userDb.getCollection('users').find({ twitch_id: options.user_id });
+                var userID = userDb.getCollection('users').find({
+                    twitch_id: options.user_id
+                });
                 streamchannel.send(`<@${userID[0].discord_id}> is offline now`);
             }
         }
@@ -241,7 +279,10 @@ function unsubscribeTwitchLiveWebhook(id) {
 function sendDiscordEmbed(event, user, game) {
     let filename = uuidv4() + ".jpg";
     downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-300x164.jpg`, filename).then(function (resultPath) {
-        let userID = userDb.getCollection('users').find({ twitch_id: event.data[0].user_id });
+        let userID = userDb.getCollection('users').find({
+            twitch_id: event.data[0].user_id
+        });
+
         let rightNow = new Date();
         let x = rightNow.toISOString();
         let embed = new RichEmbed()
@@ -255,8 +296,7 @@ function sendDiscordEmbed(event, user, game) {
         if (event.data[0].user_id === "71946143") {
             announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
             announcementschannel.send(embed);
-        }
-        else {
+        } else {
             streamchannel.send(`<@${userID[0].discord_id}> is live now`);
             streamchannel.send(embed);
         }
@@ -347,8 +387,12 @@ function format(time) {
 }
 
 function isOnlineInDB(twitch_id) {
-    if (_.findIndex(output, { twitch_id: twitch_id }) === -1) {
-        output.push({ 'twitch_id': twitch_id });
+    if (_.findIndex(output, {
+            twitch_id: twitch_id
+        }) === -1) {
+        output.push({
+            'twitch_id': twitch_id
+        });
         return false;
     }
     return true;
@@ -361,6 +405,22 @@ function isOnline(twitch_id) {
         }
         return false;
     });
+}
+
+function isPartOfStreamerFriends(id) {
+    // returns all member with target role
+    let membersWithRole = message.guild.members.filter(member => {
+        return member.roles.get(config.role);
+    }).map(member => {
+        return member.user.id;
+    });
+    // remmove discord crap from userid
+    args[0] = args[0].match(/[^a-z!@ ]\ *([.0-9])*\d/)[0];
+    // check if given user is part of STREAMER FRIENDS
+    if (membersWithRole.includes(args[0])) {
+        return true;
+    }
+    return false;
 }
 
 async function getStreamState(id) {
@@ -394,7 +454,10 @@ async function downloadIMG(url, target_filename) {
         dest: '/tmp/' + target_filename
     }
     try {
-        const { filename, image } = await download.image(options)
+        const {
+            filename,
+            image
+        } = await download.image(options)
         return (filename) // => /path/to/dest/image.jpg 
     } catch (e) {
         console.error(e)
