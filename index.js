@@ -222,7 +222,7 @@ twitchWebhook.on('streams', ({
             // get current twitch name from twitch
             getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
                 // get game name from twitch
-                if (isPartOfStreamerFriends(resultUser)) {
+                if (isPartOfStreamerFriends(event.data[0].user_id)) {
                     getTwitchGameByID(event.data[0].game_id).then(function (resultGame) {
                         sendDiscordEmbed(event, resultUser, resultGame);
                     });
@@ -408,17 +408,25 @@ function isOnline(twitch_id) {
 }
 
 function isPartOfStreamerFriends(id) {
-    // returns all member with target role
-    let membersWithRole = message.guild.members.filter(member => {
-        return member.roles.get(config.role);
-    }).map(member => {
-        return member.user.id;
+    let userID = userDb.getCollection('users').find({
+        twitch_id: id
     });
-    // remmove discord crap from userid
-    args[0] = args[0].match(/[^a-z!@ ]\ *([.0-9])*\d/)[0];
+    // report false if the user isn't in the DB
+    if (_.isEmpty(userID)) {
+        if (config.debugMode) {
+            spamchannel.send(`❌ ${id}`);
+        }
+        return false;
+    }
     // check if given user is part of STREAMER FRIENDS
-    if (membersWithRole.includes(args[0])) {
+    if (client.guilds.get('177892786861899776').member(userID[0].discord_id).roles.has(config.role)) {
+        if (config.debugMode) {
+            spamchannel.send(`✔️ ${id}`);
+        }
         return true;
+    }
+    if (config.debugMode) {
+        spamchannel.send(`❌ ${id}`);
     }
     return false;
 }
