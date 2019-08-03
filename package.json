@@ -21,7 +21,6 @@
     "lokijs": "^1.5.7",
     "phin": "^3.4.0",
     "twitch-webhook": "^1.2.4",
-    "underscore": "^1.9.1",
-    "uuid": "^3.3.2"
+    "underscore": "^1.9.1"
   }
 }

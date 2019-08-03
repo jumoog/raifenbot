@@ -1,18 +1,16 @@
 const {
+    Attachment,
     Client,
     RichEmbed
 } = require("discord.js");
 const _ = require("underscore");
 const client = new Client();
 const config = require("./config.json");
-const fs = require("fs");
 const loki = require('lokijs');
 const os = require('os');
 const p = require('phin').promisified;
-const path = require('path');
 const TwitchWebhook = require('twitch-webhook');
 const userDb = new loki('loki.json');
-const uuidv4 = require('uuid/v4');
 
 let output = [];
 
@@ -155,7 +153,7 @@ client.on("message", async message => {
                     .setThumbnail(result.profile_image_url)
                     .setURL("https://www.twitch.tv/" + result.login)
                     .addField("view count", result.view_count);
-                var userID = userDb.getCollection('users').find({
+                let userID = userDb.getCollection('users').find({
                     twitch_id: result.id
                 });
                 // if user isn't in the DB
@@ -250,7 +248,7 @@ twitchWebhook.on('streams', ({
                 twitch_id: options.user_id
             }), 1);
             if (config.offlineMessage) {
-                var userID = userDb.getCollection('users').find({
+                let userID = userDb.getCollection('users').find({
                     twitch_id: options.user_id
                 });
                 streamchannel.send(`<@${userID[0].discord_id}> is offline now`);
@@ -276,17 +274,16 @@ function unsubscribeTwitchLiveWebhook(id) {
 }
 
 function sendDiscordEmbed(event, user, game) {
-    let filename = uuidv4() + ".jpg";
-    downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-300x164.jpg`, filename).then(function (resultPath) {
+    downloadIMG(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${user}-300x164.jpg`).then(function (buffer) {
         let userID = userDb.getCollection('users').find({
             twitch_id: event.data[0].user_id
         });
-
+        let attachment = new Attachment(buffer, 'preview.jpg');
         let rightNow = new Date();
         let x = rightNow.toISOString();
         let embed = new RichEmbed()
             .setColor("#9B59B6")
-            .attachFile(resultPath)
+            .attachFile(attachment)
             .setDescription(`**Playing**: ${game}`)
             .setTitle(event.data[0].title)
             .setURL(`https://twitch.tv/${user}`)
@@ -353,12 +350,12 @@ function getAllUsers() {
 };
 
 function subscibeAll() {
-    var a = getAllUsers();
+    let users = getAllUsers();
     //spamchannel.send("Database loaded! ☁");
-    for (var i = 0; i < a.length; i++) {
-        subscribeTwitchLiveWebhook(a[i].twitch_id);
+    for (var i = 0; i < users.length; i++) {
+        subscribeTwitchLiveWebhook(users[i].twitch_id);
         if (config.debugMode) {
-            getTwitchUserByID(a[i].twitch_id).then(function (resultUser) {
+            getTwitchUserByID(users[i].twitch_id).then(function (resultUser) {
                 spamchannel.send(`loaded: <${resultUser}> ✅`);
             });
         }
@@ -455,13 +452,11 @@ async function getNewCatFact() {
     return res.body.fact;
 }
 
-async function downloadIMG(url, target_filename) {
+async function downloadIMG(url) {
     const stream = await p({
         url: url,
         // You can ask for a stream in place of 'res.body'.
         stream: true
     });
-    let target_file = path.join('/tmp/', target_filename);
-    stream.pipe(fs.createWriteStream(target_file));
-    return target_file;
+    return stream;
 }
