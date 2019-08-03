@@ -461,5 +461,7 @@ async function downloadIMG(url, target_filename) {
         // You can ask for a stream in place of 'res.body'.
         stream: true
     });
-    stream.pipe(fs.createWriteStream(path.join('/tmp/', target_filename)));
+    let target_file = path.join('/tmp/', target_filename);
+    stream.pipe(fs.createWriteStream(target_file));
+    return target_file;
 }
