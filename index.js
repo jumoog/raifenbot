@@ -2,16 +2,17 @@ const {
     Client,
     RichEmbed
 } = require("discord.js");
+const _ = require("underscore");
 const client = new Client();
 const config = require("./config.json");
-const p = require('phin').promisified;
-const TwitchWebhook = require('twitch-webhook');
+const fs = require("fs");
 const loki = require('lokijs');
-const userDb = new loki('loki.json');
-const _ = require("underscore");
 const os = require('os');
+const p = require('phin').promisified;
+const path = require('path');
+const TwitchWebhook = require('twitch-webhook');
+const userDb = new loki('loki.json');
 const uuidv4 = require('uuid/v4');
-const download = require('image-downloader')
 
 let output = [];
 
@@ -212,9 +213,7 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
 client.login(config.token);
 
 twitchWebhook.on('streams', ({
-    topic,
     options,
-    endpoint,
     event
 }) => {
     if (event.data.length != 0) {
@@ -457,17 +456,10 @@ async function getNewCatFact() {
 }
 
 async function downloadIMG(url, target_filename) {
-    const options = {
+    const stream = await p({
         url: url,
-        dest: '/tmp/' + target_filename
-    }
-    try {
-        const {
-            filename,
-            image
-        } = await download.image(options)
-        return (filename) // => /path/to/dest/image.jpg 
-    } catch (e) {
-        console.error(e)
-    }
+        // You can ask for a stream in place of 'res.body'.
+        stream: true
+    });
+    stream.pipe(fs.createWriteStream(path.join('/tmp/', target_filename)));
 }
