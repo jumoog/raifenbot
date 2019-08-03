@@ -18,8 +18,8 @@
   "homepage": "https://github.com/jumoog/raifenbot#readme",
   "dependencies": {
     "discord.js": "^11.5.1",
-    "image-downloader": "^3.4.2",
-    "lokijs": "^1.5.6",
+    "image-downloader": "^3.5.0",
+    "lokijs": "^1.5.7",
     "phin": "^3.4.0",
     "twitch-webhook": "^1.2.4",
     "underscore": "^1.9.1",
