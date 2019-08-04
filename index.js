@@ -287,7 +287,7 @@ function sendDiscordEmbed(event, user, game) {
             .setDescription(`**Playing**: ${game}`)
             .setTitle(event.data[0].title)
             .setURL(`https://twitch.tv/${user}`)
-            .setImage(`attachment://${filename}`)
+            .setImage(`attachment://preview.jpg`)
             .setTimestamp(x);
         if (event.data[0].user_id === "71946143") {
             announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
