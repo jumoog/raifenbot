@@ -289,7 +289,7 @@ function sendDiscordEmbed(event, user, game) {
             .setURL(`https://twitch.tv/${user}`)
             .setImage(`attachment://preview.jpg`)
             .setTimestamp(x);
-        if (event.data[0].user_id === "71946143") {
+        if (event.data[0].user_id === config.raifen) {
             announcementschannel.send(`@everyone <@${userID[0].discord_id}> is live now`);
             announcementschannel.send(embed);
         } else {
@@ -407,6 +407,7 @@ function isPartOfStreamerFriends(id) {
     let userID = userDb.getCollection('users').find({
         twitch_id: id
     });
+
     // report false if the user isn't in the DB
     if (_.isEmpty(userID)) {
         if (config.debugMode) {
@@ -414,12 +415,18 @@ function isPartOfStreamerFriends(id) {
         }
         return false;
     }
-    // check if given user is part of STREAMER FRIENDS
-    if (client.guilds.get('177892786861899776').member(userID[0].discord_id).roles.has(config.role)) {
-        if (config.debugMode) {
-            spamchannel.send(`✔️ ${id}`);
+
+    let guild = client.guilds.get(config.serverID);
+
+    // check if given user us part of Discord server
+    if (guild.member(userID[0].discord_id)) {
+        // check if given user is part of STREAMER FRIENDS
+        if (guild.member(userID[0].discord_id).roles.has(config.role)) {
+            if (config.debugMode) {
+                spamchannel.send(`✔️ ${id}`);
+            }
+            return true;
         }
-        return true;
     }
     if (config.debugMode) {
         spamchannel.send(`❌ ${id}`);

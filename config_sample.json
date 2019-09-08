@@ -11,5 +11,7 @@
   "port": 8443,
   "host": "",
   "offlineMessage": false,
-  "debugMode": false
+  "debugMode": false,
+  "serverID": "177892786861899776",
+  "raifen": "71946143"
 }
