@@ -10,7 +10,7 @@ const loki = require('lokijs');
 const os = require('os');
 const p = require('phin').promisified;
 const TwitchWebhook = require('twitch-webhook');
-const userDb = new loki('loki.json');
+const userDb = new loki('loki.json', {autosave: true, autosaveInterval: 4000});
 
 let output = [];
 
@@ -163,8 +163,6 @@ client.on("message", async message => {
                         twitch_id: result.id,
                         discord_id: args[0]
                     });
-                    // save DB
-                    userDb.saveDatabase();
                     // send message to room
                     spamchannel.send("added:");
                     spamchannel.send(embed);
@@ -196,8 +194,6 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
             userDb.getCollection('users').findAndRemove({
                 discord_id: newMember.id
             });
-            // save the DB
-            userDb.saveDatabase();
             // unsubcribe Twitch webhook
             unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
         }
@@ -234,8 +230,6 @@ twitchWebhook.on('streams', ({
                         userDb.getCollection('users').findAndRemove({
                             discord_id: newMember.id
                         });
-                        // save the DB
-                        userDb.saveDatabase();
                         // unsubcribe Twitch webhook
                         unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
                     }
