@@ -10,7 +10,10 @@ const loki = require('lokijs');
 const os = require('os');
 const p = require('phin').promisified;
 const TwitchWebhook = require('twitch-webhook');
-const userDb = new loki('loki.json', {autosave: true, autosaveInterval: 4000});
+const userDb = new loki('loki.json', {
+    autosave: true,
+    autosaveInterval: 4000
+});
 
 let output = [];
 
@@ -220,19 +223,7 @@ twitchWebhook.on('streams', ({
                         sendDiscordEmbed(event, resultUser, resultGame);
                     });
                 } else {
-                    // check if user was in our DB
-                    let twitchID = userDb.getCollection('users').find({
-                        discord_id: newMember.id
-                    });
-                    // if user was in our DB
-                    if (!_.isEmpty(twitchID)) {
-                        // remove the user
-                        userDb.getCollection('users').findAndRemove({
-                            discord_id: newMember.id
-                        });
-                        // unsubcribe Twitch webhook
-                        unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
-                    }
+                    unsubscribeTwitchLiveWebhook(event.data[0].user_id);
                 }
             });
         }
@@ -347,11 +338,13 @@ function subscibeAll() {
     let users = getAllUsers();
     //spamchannel.send("Database loaded! ☁");
     for (var i = 0; i < users.length; i++) {
-        subscribeTwitchLiveWebhook(users[i].twitch_id);
-        if (config.debugMode) {
-            getTwitchUserByID(users[i].twitch_id).then(function (resultUser) {
-                spamchannel.send(`loaded: <${resultUser}> ✅`);
-            });
+        if (isPartOfStreamerFriends(users[i].twitch_id)) {
+            subscribeTwitchLiveWebhook(users[i].twitch_id);
+            if (config.debugMode) {
+                getTwitchUserByID(users[i].twitch_id).then(function (resultUser) {
+                    spamchannel.send(`loaded: <${resultUser}> ✅`);
+                });
+            }
         }
     }
 }
