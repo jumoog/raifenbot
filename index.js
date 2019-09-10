@@ -33,9 +33,10 @@ const twitchWebhook = new TwitchWebhook({
 });
 
 client.on("ready", () => {
-    announcementschannel = client.channels.find('name', "announcements");
-    spamchannel = client.channels.find('name', config.trash_room);
-    streamchannel = client.channels.find('name', config.target_room);
+    
+    announcementschannel = client.channels.find(channel => channel.name === "announcements");
+    spamchannel = client.channels.find(channel => channel.name === config.trash_room);
+    streamchannel = client.channels.find(channel => channel.name === config.target_room);
     if (config.debugMode) {
         spamchannel.send("I am so 🧀");
     }
