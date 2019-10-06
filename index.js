@@ -15,11 +15,7 @@ const userDb = new loki('loki.json', {
     autosaveInterval: 4000
 });
 
-let output = [];
-
-let spamchannel;
-let streamchannel;
-let announcementschannel;
+let output = [], spamchannel, streamchannel, announcementschannel;
 
 const twitchWebhook = new TwitchWebhook({
     client_id: config.Client_ID,
@@ -92,7 +88,7 @@ client.on("message", async message => {
         // Calculates ping between sending a message and editing it, giving a nice round-trip latency.
         // The second ping is an average latency between the bot and the websocket server (one-way, not round-trip)
         const m = await message.channel.send("Ping?");
-        m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
+        await m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
     }
 
     if (command === "catfact") {
@@ -128,7 +124,7 @@ client.on("message", async message => {
             return message.reply("Sorry, you don't have permissions to use this!");
         }
         // check if we have enough args
-        if (args.length != 2) {
+        if (args.length !== 2) {
             message.reply('incomplete argument: \n please use !add <@username> <twitch name>');
             return;
         }
@@ -138,8 +134,8 @@ client.on("message", async message => {
         }).map(member => {
             return member.user.id;
         });
-        // remmove discord crap from userid
-        args[0] = args[0].match(/[^a-z!@ ]\ *([.0-9])*\d/)[0];
+        // remove discord crap from userid
+        args[0] = args[0].match(/[^a-z!@ ] *([.0-9])*\d/)[0];
         // check if given user is part of STREAMER FRIENDS
         if (membersWithRole.includes(args[0])) {
             getStreamInfos(args[1]).then(function (result) {
@@ -170,7 +166,7 @@ client.on("message", async message => {
                     // send message to room
                     spamchannel.send("added:");
                     spamchannel.send(embed);
-                    // subcribe Twitch webhook
+                    // subscribe Twitch webhook
                     subscribeTwitchLiveWebhook(result.id);
 
                 } else {
@@ -179,7 +175,7 @@ client.on("message", async message => {
             });
 
         } else {
-            message.reply(`<@${args[0]}> is not part of of STREAMER FRIENDS, please add <@${args[0]}> to STREAMER FRIENDS first!`);
+            await message.reply(`<@${args[0]}> is not part of of STREAMER FRIENDS, please add <@${args[0]}> to STREAMER FRIENDS first!`);
         }
     }
 });
@@ -198,7 +194,7 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
             userDb.getCollection('users').findAndRemove({
                 discord_id: newMember.id
             });
-            // unsubcribe Twitch webhook
+            // unsubscribe Twitch webhook
             unsubscribeTwitchLiveWebhook(twitchID[0].twitch_id);
         }
         spamchannel.send(`${newMember} is no longer part of STREAMER FRIENDS`);
@@ -214,7 +210,7 @@ twitchWebhook.on('streams', ({
     options,
     event
 }) => {
-    if (event.data.length != 0) {
+    if (event.data.length !== 0) {
         if (!isOnlineInDB(event.data[0].user_id)) {
             // get current twitch name from twitch
             getTwitchUserByID(event.data[0].user_id).then(function (resultUser) {
@@ -333,7 +329,7 @@ async function getStreamInfos(streamer) {
 
 function getAllUsers() {
     return userDb.getCollection('users').find();
-};
+}
 
 function subscibeAll() {
     let users = getAllUsers();
@@ -359,14 +355,14 @@ process.on('SIGINT', () => {
 });
 
 function format(time) {
-    let days = Math.floor(time % 31536000 / 86400)
-    let hours = Math.floor(time % 31536000 % 86400 / 3600)
-    let minutes = Math.floor(time % 31536000 % 86400 % 3600 / 60)
-    let seconds = Math.round(time % 31536000 % 86400 % 3600 % 60)
-    days = days > 9 ? days : '0' + days
-    hours = hours > 9 ? hours : '0' + hours
-    minutes = minutes > 9 ? minutes : '0' + minutes
-    seconds = seconds > 9 ? seconds : '0' + seconds
+    let days = Math.floor(time % 31536000 / 86400);
+    let hours = Math.floor(time % 31536000 % 86400 / 3600);
+    let minutes = Math.floor(time % 31536000 % 86400 % 3600 / 60);
+    let seconds = Math.round(time % 31536000 % 86400 % 3600 % 60);
+    days = days > 9 ? days : '0' + days;
+    hours = hours > 9 ? hours : '0' + hours;
+    minutes = minutes > 9 ? minutes : '0' + minutes;
+    seconds = seconds > 9 ? seconds : '0' + seconds;
     return `${days > 0 ? `${days}:` : ``}${(hours || days) > 0 ? `${hours}:` : ``}${minutes}:${seconds}`
 }
 
@@ -384,10 +380,7 @@ function isOnlineInDB(twitch_id) {
 
 function isOnline(twitch_id) {
     getStreamState(twitch_id).then(function (resultUser) {
-        if (_.isEmpty(resultUser)) {
-            return true;
-        }
-        return false;
+        return !!_.isEmpty(resultUser);
     });
 }
 
