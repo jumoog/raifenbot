@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/jumoog/raifenbot#readme",
   "dependencies": {
+    "@types/lokijs": "^1.5.2",
+    "@types/node": "^13.1.4",
+    "@types/underscore": "^1.9.4",
     "discord.js": "^11.5.1",
     "lokijs": "^1.5.8",
     "phin": "^3.4.1",
